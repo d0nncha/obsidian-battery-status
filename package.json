@@ -1,0 +1,33 @@
+{
+  "name": "obsidian-battery-status",
+  "version": "0.1.0",
+  "description": "Obsidian plugin to display Bluetooth device battery levels in the status bar.",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "rollup -c -w",
+    "build": "rollup -c",
+    "check": "tsc --noEmit"
+  },
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "bluetooth",
+    "battery"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@abandonware/noble": "^1.9.2-15",
+    "obsidian": "^1.5.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.5",
+    "rollup": "^4.12.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  }
+}
