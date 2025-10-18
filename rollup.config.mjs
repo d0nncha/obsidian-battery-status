@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 export default {
   input: 'src/app/main.ts',
   output: {
-    dir: 'dist',
+    dir: '.',
     entryFileNames: 'main.js',
     format: 'cjs',
     sourcemap: true,
@@ -31,9 +31,7 @@ export default {
     typescript({ tsconfig: path.resolve(__dirname, 'tsconfig.json') }),
     copy({
       targets: [
-        { src: 'manifest.json', dest: 'dist' },
-        { src: 'styles.css', dest: 'dist' },
-        { src: 'src/platform/windows/helpers/ble-read-battery.js', dest: 'dist/helpers' }
+        { src: 'src/platform/windows/helpers/*', dest: './platform/windows/helpers' }
       ]
     })
   ]
