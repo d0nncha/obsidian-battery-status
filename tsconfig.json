@@ -11,7 +11,7 @@
     "declaration": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["obsidian"],
+    "types": ["obsidian", "node"],
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"],
