@@ -1,7 +1,8 @@
-import { Plugin } from 'obsidian';
+import path from 'path';
+import { FileSystemAdapter, Plugin } from 'obsidian';
 import { BatteryService } from './services/BatteryService';
 import { BatterySettingsTab, DEFAULT_SETTINGS, DeviceSetting, PluginSettings } from './settings';
-import { platform } from '../platform';
+import { Platform, initializePlatform } from '../platform';
 import { StatusBarWidget } from '../ui/statusBar';
 import { normalizeId } from '../platform/shared/normalize';
 
@@ -16,9 +17,13 @@ export default class ObsidianBatteryStatusPlugin extends Plugin {
   private batteryService: BatteryService | null = null;
   private deviceTimers: Map<string, DeviceTimer> = new Map();
   private devicePercents: Map<string, number | null> = new Map();
+  private platform: Platform | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
+
+    const platform = initializePlatform({ pluginDir: this.resolvePluginDirectory() });
+    this.platform = platform;
 
     this.batteryService = new BatteryService(platform.battery);
 
@@ -33,6 +38,16 @@ export default class ObsidianBatteryStatusPlugin extends Plugin {
 
   onunload(): void {
     this.clearTimers();
+  }
+
+  private resolvePluginDirectory(): string {
+    const adapter = this.app.vault.adapter;
+    if (adapter instanceof FileSystemAdapter) {
+      const basePath = adapter.getBasePath();
+      return path.join(basePath, '.obsidian', 'plugins', this.manifest.id);
+    }
+
+    throw new Error('Unsupported vault adapter: expected FileSystemAdapter');
   }
 
   async loadSettings(): Promise<void> {
