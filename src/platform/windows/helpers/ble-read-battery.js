@@ -4,19 +4,19 @@ const noble = require('@abandonware/noble');
 
 const BATTERY_SERVICE_UUID = '180f';
 const BATTERY_LEVEL_CHAR_UUID = '2a19';
-const DEFAULT_TIMEOUT_MS = 20000;
+const DEFAULT_TIMEOUT_MS = 30000;
 
 function parseArgs(argv) {
   const addrIndex = argv.indexOf('--addr');
-  if (addrIndex !== -1 && argv[addrIndex + 1]) {
-    return argv[addrIndex + 1].toLowerCase();
-  }
-  return null;
+  const idIndex = argv.indexOf('--id');
+  const addr = (addrIndex !== -1 && argv[addrIndex + 1]) ? argv[addrIndex + 1].toLowerCase() : null;
+  const id = (idIndex !== -1 && argv[idIndex + 1]) ? argv[idIndex + 1].toLowerCase() : null;
+  return { addr, id };
 }
 
-async function readBattery(targetAddress) {
-  if (!targetAddress) {
-    throw new Error('Missing --addr argument');
+async function readBattery(target) {
+  if (!target.addr && !target.id) {
+    throw new Error('Missing --addr or --id argument');
   }
 
   return new Promise((resolve, reject) => {
@@ -29,7 +29,9 @@ async function readBattery(targetAddress) {
       if (timeout) clearTimeout(timeout);
       noble.removeAllListeners('discover');
       noble.removeAllListeners('stateChange');
-      noble.stopScanning().catch(() => {});
+
+      try { noble.stopScanning(); } catch (_) {}
+
       if (error) {
         reject(error);
       } else {
@@ -43,7 +45,11 @@ async function readBattery(targetAddress) {
 
     noble.on('discover', async (peripheral) => {
       const address = (peripheral.address || '').toLowerCase();
-      if (address !== targetAddress) {
+      const uuid = (peripheral.uuid || '').toLowerCase();
+      const match =
+        (target.addr && address && address === target.addr) ||
+        (target.id && uuid && uuid === target.id);
+      if (!match) {
         return;
       }
 
@@ -72,12 +78,14 @@ async function readBattery(targetAddress) {
     noble.on('stateChange', async (state) => {
       if (state === 'poweredOn') {
         try {
-          await noble.startScanningAsync([BATTERY_SERVICE_UUID], false);
+          // ВАЖНО: скан без фильтра — иначе устройства,
+          // не рекламирующие 0x180F, не попадут в discover.
+          await noble.startScanningAsync([], false);
         } catch (error) {
           finalize(error);
         }
       } else {
-        noble.stopScanning().catch(() => {});
+        try { noble.stopScanning(); } catch (_) {}
       }
     });
   });
@@ -85,8 +93,8 @@ async function readBattery(targetAddress) {
 
 (async () => {
   try {
-    const address = parseArgs(process.argv.slice(2));
-    const percent = await readBattery(address);
+    const target = parseArgs(process.argv.slice(2));
+    const percent = await readBattery(target);
     process.stdout.write(`${percent}`);
     process.exit(0);
   } catch (error) {
