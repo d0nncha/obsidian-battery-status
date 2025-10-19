@@ -13,7 +13,16 @@ export function runNodeScript(
   timeoutMs = 15000
 ): Promise<RunNodeScriptResult> {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [scriptPath, ...args], {
+    const spawnArgs: string[] = [];
+
+    const isWindows = process.platform === 'win32';
+    const isElectron = Boolean(process.versions?.electron);
+
+    if (isWindows && isElectron) {
+      spawnArgs.push('--ms-enable-electron-run-as-node');
+    }
+
+    const child = spawn(process.execPath, [...spawnArgs, scriptPath, ...args], {
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
