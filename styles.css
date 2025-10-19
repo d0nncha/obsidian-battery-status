@@ -1,1 +1,22 @@
-/* Styles reserved for future UI enhancements. */
+.obsidian-battery-status {
+  display: inline-flex;
+  align-items: center;
+}
+
+.obsidian-battery-status__device,
+.obsidian-battery-status__empty {
+  display: inline-flex;
+  align-items: center;
+}
+
+.obsidian-battery-status__icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  margin-right: 0.35em;
+  opacity: 0.9;
+}
+
+.obsidian-battery-status__separator {
+  margin: 0 0.25em;
+}
