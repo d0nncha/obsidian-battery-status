@@ -1,5 +1,4 @@
 import { spawn, execFileSync } from 'child_process';
-import * as os from 'os';
 
 export interface RunNodeScriptResult {
   stdout: string;
