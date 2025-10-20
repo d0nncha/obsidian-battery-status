@@ -5,15 +5,16 @@ import { normalizeId } from '../platform/shared/normalize';
 export interface DeviceSetting {
   name: string;
   mac: string;
-  interval: number;
 }
 
 export interface PluginSettings {
   devices: DeviceSetting[];
+  interval: number;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
-  devices: []
+  devices: [],
+  interval: 300
 };
 
 export class BatterySettingsTab extends PluginSettingTab {
@@ -24,17 +25,31 @@ export class BatterySettingsTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-
-    containerEl.createEl('h2', { text: 'Bluetooth Devices' });
-
-    if (!this.plugin.settings.devices.length) {
-      containerEl.createEl('p', { text: 'Add a device to begin tracking its battery level.' });
-    }
+    new Setting(containerEl)
+      .setName('Polling interval')
+      .setDesc('Bluetooth device polling interval in seconds.')
+      .addText((text) =>
+      text
+        .setPlaceholder('Interval (seconds)')
+        .setValue(String(this.plugin.settings.interval))
+        .onChange(async (value) => {
+          const parsed = Number.parseInt(value, 10);
+          if (!Number.isNaN(parsed) && parsed > 0) {
+            this.plugin.settings.interval = parsed;
+            await this.plugin.saveSettings();
+          } else {
+            new Notice('Interval must be a positive number.');
+          }
+        }))
+      .addExtraButton((button) =>
+        button
+          .setIcon('timer')
+      );
 
     this.plugin.settings.devices.forEach((device, index) => {
       const deviceSetting = new Setting(containerEl)
         .setName(device.name || `Device ${index + 1}`)
-        .setDesc('Configure the name, MAC address, and polling interval.');
+        .setDesc('Configure the name and MAC address.');
 
       deviceSetting.addText((text) =>
         text
@@ -54,21 +69,6 @@ export class BatterySettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             device.mac = normalizeId(value);
             await this.plugin.saveSettings();
-          })
-      );
-
-      deviceSetting.addText((text) =>
-        text
-          .setPlaceholder('Interval (seconds)')
-          .setValue(String(device.interval))
-          .onChange(async (value) => {
-            const parsed = Number.parseInt(value, 10);
-            if (!Number.isNaN(parsed) && parsed > 0) {
-              device.interval = parsed;
-              await this.plugin.saveSettings();
-            } else {
-              new Notice('Interval must be a positive number.');
-            }
           })
       );
 
@@ -92,9 +92,8 @@ export class BatterySettingsTab extends PluginSettingTab {
           .setButtonText('Add')
           .onClick(async () => {
             this.plugin.settings.devices.push({
-              name: 'New device',
+              name: '',
               mac: '',
-              interval: 300
             });
             await this.plugin.saveSettings();
             this.display();

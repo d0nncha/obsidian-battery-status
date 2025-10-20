@@ -55,8 +55,7 @@ export default class ObsidianBatteryStatusPlugin extends Plugin {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
     this.settings.devices = (this.settings.devices ?? []).map((device) => ({
       ...device,
-      mac: normalizeId(device.mac ?? ''),
-      interval: Math.max(5, Number.parseInt(String(device.interval ?? 300), 10) || 300)
+      mac: normalizeId(device.mac ?? '')
     }));
   }
 
@@ -84,13 +83,13 @@ export default class ObsidianBatteryStatusPlugin extends Plugin {
       .filter((device) => device.mac.length > 0);
 
     for (const device of devices) {
-      this.scheduleDevice(device);
+      this.scheduleDevice(device, this.settings.interval);
     }
 
     this.updateStatusBar();
   }
 
-  private scheduleDevice(device: DeviceSetting): void {
+  private scheduleDevice(device: DeviceSetting, interval: number): void {
     if (!this.batteryService) return;
 
     const mac = normalizeId(device.mac);
@@ -108,7 +107,7 @@ export default class ObsidianBatteryStatusPlugin extends Plugin {
     // First tick immediately
     run().catch((error) => console.error('Battery poll failed', error));
 
-    const intervalMs = Math.max(5, device.interval) * 1000;
+    const intervalMs = Math.max(5, interval) * 1000;
     const handle = window.setInterval(() => {
       run().catch((error) => console.error('Battery poll failed', error));
     }, intervalMs);
